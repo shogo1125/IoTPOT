@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-# last modified : 2015/02/26
+# last modified : 2015/02/23
+# this script need getdata.sh and datafile to run.
 
 import SocketServer
 import sys
@@ -14,7 +15,7 @@ import binascii
 option="\xff\xfd\x01\xff\xfd\x1f\xff\xfd\x21\xff\xfb\x01\xff\xfb\x03"
 loginmes="192.0.0.64.login:\x20"
 password="Password:\x20"
-incorrect="Login incorrect\x0d\x0a192.0.0.64.login:\x20"
+incorrect="Login incorrect\x0d\x0a"
 rn="\x0d\x0a"
 
 class Handler(SocketServer.StreamRequestHandler):
@@ -36,12 +37,24 @@ class Handler(SocketServer.StreamRequestHandler):
         self.targetPORT = self.server.server_address[1]
         self.receiveQueue = []
         print "%s IP %s.%s > %s.%s : connect" \
-        % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
 
-        self.request.setblocking(0)
+        odd = (self.targetPORT % 29) + 1
+        cmd = "./getdata.sh %d 1" % odd
+        pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        option = pic.stdout.read()
         self.request.send(option)
         time.sleep(0.2)
+
+        cmd = "./getdata.sh %d 2" % odd
+        pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        loginmes = pic.stdout.read()
         self.request.send(loginmes)
+
+        cmd = "./getdata.sh %d 3" % odd
+        pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        password = pic.stdout.read()
+
         while True:
             if (datetime.datetime.today() - self.date).seconds > 300:
                 break
@@ -59,7 +72,7 @@ class Handler(SocketServer.StreamRequestHandler):
                     elif self.state == 1:
                         print "pass:%s" % self.payload
                         self.state = 0 
-                        self.payload = incorrect
+                        self.payload = incorrect + loginmes
                         time.sleep(1)
                     else:
                         print "ERROR"
