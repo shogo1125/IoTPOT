@@ -99,7 +99,7 @@ class Handler(SocketServer.StreamRequestHandler):
                     elif self.payload.find("var") != -1:
                         self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
                     elif self.payload.find(cat_sh) != -1:
-                        cmd = "cat hoge.txt"
+                        cmd = "cat output.txt"
                         pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                         output = pic.stdout.read()
                         self.payload = cat_sh+"\x0d\x0a"+output
