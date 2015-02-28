@@ -14,7 +14,7 @@ class Handler(SocketServer.StreamRequestHandler):
 # The Handler class for proxy
 # Make instance with each connection and override handle() method
 # Session from Attacker : self.request
-    
+
     # constracta
     def __init__(self,request,client_address,server):
         self.attackerIP = ""
@@ -23,13 +23,13 @@ class Handler(SocketServer.StreamRequestHandler):
         self.date = datetime.datetime.today()
         self.proxySocket = None
         SocketServer.StreamRequestHandler.__init__(self,request,client_address,server)
-    
+
     def handle(self):
         self.receiveQueue = []
         self.attackerIP = self.client_address[0]
-        self.targetPORT = self.server.server_address[1] 
+        self.targetPORT = self.server.server_address[1]
         print "%s IP %s.%s > %s.%s : connect" \
-                 % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
         th = QemuThread(self.attackerIP,self.targetPORT,self.request,self.receiveQueue)
         th.start()
 
@@ -46,7 +46,7 @@ class Handler(SocketServer.StreamRequestHandler):
                       # send mail
                       self.payload = self.payload.replace(" ","_")
                       cmd = "python send_mail.py '%s'" % self.payload
-                      print "FOUND MALWARE !!"  
+                      print "FOUND MALWARE !!"
                       subprocess.call(cmd.strip().split(" "))
                       self.payload = self.payload.replace("wget","WGOT")
 
@@ -80,7 +80,7 @@ class Handler(SocketServer.StreamRequestHandler):
 
         self.request.close()
         print "%s IP %s.%s > %s.%s : session closed" \
-                 % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
 
 
 class QemuThread(threading.Thread):
@@ -106,9 +106,9 @@ class QemuThread(threading.Thread):
           try:
             # socket connect
             self.qemuSocket.connect((self.qemuIP,int(self.targetPORT)))
-          except IndexError: 
+          except IndexError:
             print "Error Connection to Qemu"
-    
+
     def run(self):
         self.qemuSocket.setblocking(0)
         while True:

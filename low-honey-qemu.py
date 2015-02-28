@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-# last modified : 2015/02/28
+# last modified : 2015/02/16
+
 import SocketServer
 import socket
 import datetime
@@ -9,7 +10,6 @@ import threading
 import binascii
 import sys
 import subprocess
-import struct
 
 option="\xff\xfd\x01\xff\xfd\x1f\xff\xfd\x21\xff\xfb\x01\xff\xfb\x03"
 loginmes="192.0.0.64.login:\x20"
@@ -51,13 +51,12 @@ class Handler(SocketServer.StreamRequestHandler):
         self.state = 0
         self.date = datetime.datetime.today()
         SocketServer.StreamRequestHandler.__init__(self,request,client_address,server)
-
+        self.isQemuThread = 0
 
     def handle(self):
         self.attackerIP = self.client_address[0]
         self.targetPORT = self.server.server_address[1]
         self.receiveQueue = []
-        self.binary = ""
         print "%s IP %s.%s > %s.%s : connect" \
         % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
 
@@ -100,17 +99,18 @@ class Handler(SocketServer.StreamRequestHandler):
                     elif self.payload.find("var") != -1:
                         self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
                     elif self.payload.find(cat_sh) != -1:
-                        f = open("output1.txt")
-                        datas = f.read()
-                        f.close()
-                        data = datas.split(' ')
-                        for hexa in data:
-                          d = int(hexa,16)
-                          self.binary += struct.pack('!L',d)
-                        self.payload = cat_sh+"\x0d\x0a"+self.binary
+                        cmd = "cat output.txt"
+                        pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        output = pic.stdout.read()
+                        self.payload = cat_sh+"\x0d\x0a"+output
                     else:
-                        self.payload = self.payload.replace(rn,"")
-                        self.payload = "sh: "+ self.payload + ": command not found\x0d\x0a\x7e\x20\x24\x20"
+                        if self.isQemuQemuThread == 0:
+                          th = QemuThread(self.attackerIP,self.targetPORT,self.request,self.receiveQueue)
+                          th.start()
+                          self.isQemuQemuThread = 1
+                        if len(th.receiveQueue) != 0:
+                            sendData = th.receiveQueue.pop(0)
+                            self.payload = sendData
 
                     self.receiveQueue.append(self.payload)
 
@@ -125,6 +125,53 @@ class Handler(SocketServer.StreamRequestHandler):
 
         self.request.close()
         print "%s : [A] session closed" % self.date
+
+class QemuThread(threading.Thread):
+# The Thread class for Qemu
+# Make instance with each connection from Attacker
+
+    def __init__(self,qemuIP,targetPORT,,proxyThreadRequest,proxyThreadQueue):
+        self.proxyThreadQueue = proxyThreadQueue
+        self.receiveQueue = []
+        self.proxyThreadRequest = proxyThreadRequest
+###############################################################
+        self.qemuIP = "192.168.200.2"
+###############################################################
+        self.targetPORT = targetPORT
+        self.responce = ""
+        self.date = datetime.datetime.today()
+        self.qemuSocket = None
+        threading.Thread.__init__(self)
+
+        if not self.qemuSocket:
+          # make Client socket
+          self.qemuSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+          try:
+            # socket connect
+            self.qemuSocket.connect((self.qemuIP,int(self.targetPORT)))
+          except IndexError:
+            print "Error Connection to Qemu"
+
+    def run(self):
+        self.qemuSocket.setblocking(0)
+        while True:
+            if ( datetime.datetime.today() - self.date).seconds > 300:
+                break
+
+            try:
+                # receive responce from Qemu
+                self.responce = self.qemuSocket.recv(8192)
+                if len(self.responce) != 0:
+                    self.receiveQueue.append(self.responce)
+            except:
+                pass
+            # check receive Queue
+            if len(self.proxyThreadQueue) != 0:
+                sendData = self.proxyThreadQueue.pop(0)
+                self.qemuSocket.send(sendData)
+                self.date = datetime.datetime.today()
+
+        print "%s : Qemu session closed" % self.date
 
 
 if __name__ == "__main__":
