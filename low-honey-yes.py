@@ -16,12 +16,13 @@ loginmes="192.0.0.64.login:\x20"
 password="Password:\x20"
 incorrect="Login incorrect\x0d\x0a192.0.0.64.login:\x20"
 rn="\x0d\x0a"
-busybox="\x0d\x0aBusyBox v1.1.2 (2007.05.09-01:19+0000) Built-in shell (ash)\x0d\x0a" \
-        "Enter 'help' for a list of built-in commands.\x0d\x0a\x7e\x20\x24\x20"
+busybox="\x0d\x0a\x0d\x0a\x0d\x0aBusyBox v1.1.2 (2007.05.09-01:19+0000) Built-in shell (ash)\x0d\x0a" \
+        "Enter 'help' for a list of built-in commands.\x0d\x0a\x0d\x0a\x7e\x20\x24\x20\x0d\x0a"
 ZORRO="/bin/busybox ZORRO\x0d\x0a"
 wget="/bin/busybox wget\x0d\x0a"
 echo_ZORRO="\x5c\x5c\x78\x35\x41\x5c\x5c\x78\x34\x46\x5c\x5c\x78\x35\x32\x5c\x5c\x78\x35\x32\x5c\x5c\x78\x34\x46\x0d\x0a"
 echo_gayfgt="\x5c\x78\x36\x37\x5c\x78\x36\x31\x5c\x78\x37\x39\x5c\x78\x36\x36\x5c\x78\x36\x37\x5c\x78\x37\x34"
+echo_gayfgt2="\x5c\x31\x34\x37\x5c\x31\x34\x31\x5c\x31\x37\x31\x5c\x31\x34\x36\x5c\x31\x34\x37\x5c\x31\x36\x34"
 cat_mount="cat /proc/mounts"
 status="""rootfs / rootfs rw 0 0
 /dev/root / cramfs ro 0 0
@@ -97,8 +98,17 @@ class Handler(SocketServer.StreamRequestHandler):
                         self.payload = self.payload+"ZORRO\x0d\x0a"+"\x7e\x20\x24\x20"
                     elif self.payload.find(echo_gayfgt) != -1:
                         self.payload = self.payload+"gayfgt\x0d\x0a"+"\x7e\x20\x24\x20"
+                    elif self.payload.find(echo_gayfgt2) != -1:
+                        self.payload = self.payload+"gayfgt\x0d\x0a"+"\x7e\x20\x24\x20"
                     elif self.payload.find("var") != -1:
-                        self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
+                        if self.payload.find("/bin/busybox rm -rf /var/tmp/") != -1:
+                          pass
+                        elif self.payload.find("bin.sh") != -1:
+                          self.payload = self.payload+"binfagt\x0d\x0a"
+                        else:
+                          self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
+                    elif self.payload.find("$HOME/.*history") != -1:
+                        self.payload = ""
                     elif self.payload.find(cat_sh) != -1:
                         f = open("output1.txt")
                         datas = f.read()

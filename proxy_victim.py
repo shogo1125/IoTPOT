@@ -1,12 +1,11 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-# last modified : 2015/01/21
+# last modified : 2015/02/13
 
 import SocketServer
 import sys
 import socket
 import datetime
-import time
 import subprocess
 import threading
 
@@ -28,8 +27,7 @@ class Handler(SocketServer.StreamRequestHandler):
         self.receiveQueue = []
         self.attackerIP = self.client_address[0]
         self.targetPORT = self.server.server_address[1]
-        print "%s IP %s.%s > %s.%s : connect" \
-            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+        print "%s start handle" % self.date
         th = QemuThread(self.attackerIP,self.targetPORT,self.request,self.receiveQueue)
         th.start()
 
@@ -43,31 +41,12 @@ class Handler(SocketServer.StreamRequestHandler):
                 self.payload = self.request.recv(8192)
                 if len(self.payload) != 0:
                     if self.payload.find("wget") != -1:
-                      # send mail
-                      self.payload = self.payload.replace(" ","_")
-                      cmd = "python send_mail.py '%s'" % self.payload
-                      print "FOUND MALWARE !!"
-                      subprocess.call(cmd.strip().split(" "))
-                      self.payload = self.payload.replace("wget","WGOT")
+                      self.payload = self.payload.replace("wget","WGET")
+                    if self.payload.find("tftp") != -1:
+                      self.payload = self.payload.replace("tftp","TFTP")
+                    if self.payload.find("exit") != -1:
+                      self.payload = self.payload.replace("exit","EXIT")
 
-                    if self.payload.find("1234") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("admin") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("Adnim") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("changeme") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("guest") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("dreambox") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("user") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("nokia") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("support") != -1:
-                      self.payload = "root\x0d\x0a"
                     self.receiveQueue.append(self.payload)
             except socket.error:
                 pass
@@ -79,20 +58,20 @@ class Handler(SocketServer.StreamRequestHandler):
                 self.date = datetime.datetime.today()
 
         self.request.close()
-        print "%s IP %s.%s > %s.%s : session closed" \
-            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+        print "%s : [A] session closed" % self.date
 
 
 class QemuThread(threading.Thread):
 # The Thread class for Qemu
 # Make instance with each connection from Attacker
 
-    def __init__(self,qemuIP,targetPORT,,proxyThreadRequest,proxyThreadQueue):
+    def __init__(self,qemuIP,targetPORT,proxyThreadRequest,proxyThreadQueue):
         self.proxyThreadQueue = proxyThreadQueue
         self.receiveQueue = []
         self.proxyThreadRequest = proxyThreadRequest
 ###############################################################
-        self.qemuIP = "192.168.200.2"
+        #self.qemuIP = "187.168.157.150"
+        self.qemuIP = sys.argv[2]
 ###############################################################
         self.targetPORT = targetPORT
         self.responce = ""
@@ -106,10 +85,9 @@ class QemuThread(threading.Thread):
           try:
             # socket connect
             self.qemuSocket.connect((self.qemuIP,int(self.targetPORT)))
-
-          except IndexError:
+          except IndexError: 
             print "Error Connection to Qemu"
-
+    
     def run(self):
         self.qemuSocket.setblocking(0)
         while True:
@@ -131,9 +109,10 @@ class QemuThread(threading.Thread):
 
         print "%s : Qemu session closed" % self.date
 
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print "Usage: python %s #port " % sys.argv[0],sys.exit(-1)
+    if len(sys.argv) != 3:
+        print "Usage: python %s #port victimIP" % sys.argv[0],sys.exit(-1)
 
     PORT = int(sys.argv[1])
     server = SocketServer.ThreadingTCPServer(('', PORT), Handler)
