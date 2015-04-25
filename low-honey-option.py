@@ -103,6 +103,8 @@ class Handler(SocketServer.StreamRequestHandler):
                         self.payload = busybox
                     elif self.payload.find(cat_mount) != -1:
                         self.payload = cat_mount+"\x0d\x0a"+status+"\x0d\x0a"+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
+                    elif self.payload.find("echo welcome") != -1:
+                         self.payload = "welcome"+"\x0d\x0a"+"\x7e\x20\x24\x20"  
                     elif self.payload.find(ZORRO) != -1:
                         self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
                     elif self.payload.find(wget) != -1:

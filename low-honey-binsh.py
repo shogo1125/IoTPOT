@@ -1,7 +1,6 @@
-#! /usr/bin/env python
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 # last modified : 2015/02/28
-
 import SocketServer
 import socket
 import datetime
@@ -39,7 +38,6 @@ devpts /dev/pts devpts rw 0 0
 """
 cat_sh="/bin/busybox cat /bin/sh"
 
-
 class Handler(SocketServer.StreamRequestHandler):
 # The Handler class for proxy
 # Make instance with each connection and override handle() method
@@ -60,6 +58,9 @@ class Handler(SocketServer.StreamRequestHandler):
         self.targetPORT = self.server.server_address[1]
         self.receiveQueue = []
         self.binary = ""
+        self.responce_cat_sh = ""
+        odd = (self.targetPORT % 5) + 1
+        filename = "output/output" + str(odd) + ".txt"
         print "%s IP %s.%s > %s.%s : connect" \
         % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
 
@@ -113,7 +114,7 @@ class Handler(SocketServer.StreamRequestHandler):
                     elif self.payload.find("$HOME/.*history") != -1:
                         self.payload = ""
                     elif self.payload.find(cat_sh) != -1:
-                        f = open("output1.txt")
+                        f = open(filename)
                         datas = f.read()
                         f.close()
                         data = datas.split(' ')

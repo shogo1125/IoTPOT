@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 # last modified : 2015/02/13
+# usage ; python proxy_victim port IP
 
 import SocketServer
 import sys
