@@ -5,7 +5,7 @@ if [ $# -ne 2 ]; then
   exit 1
 fi
 
-datafile=./datafile
+datafile=./etc/datafile
 if [ ! -e "${datafile}" ]; then
   echo "file "${datafile}" not found"
   exit 1
