@@ -10,10 +10,10 @@ import time
 import subprocess
 import threading
 
-class Handler(SocketServer.StreamRequestHandler):
 # The Handler class for proxy
 # Make instance with each connection and override handle() method
 # Session from Attacker : self.request
+class Handler(SocketServer.StreamRequestHandler):
 
     # constracta
     def __init__(self,request,client_address,server):
@@ -29,7 +29,8 @@ class Handler(SocketServer.StreamRequestHandler):
         self.attackerIP = self.client_address[0]
         self.targetPORT = self.server.server_address[1]
         print "%s IP %s.%s > %s.%s : connect" \
-            % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
+            % (self.date,self.attackerIP,self.client_address[1],\
+               self.server.server_address[0],self.targetPORT)
         th = QemuThread(self.attackerIP,self.targetPORT,self.request,self.receiveQueue)
         th.start()
 
@@ -43,31 +44,25 @@ class Handler(SocketServer.StreamRequestHandler):
                 self.payload = self.request.recv(8192)
                 if len(self.payload) != 0:
                     if self.payload.find("wget") != -1:
-                      # send mail
-                      self.payload = self.payload.replace(" ","_")
-                      cmd = "python send_mail.py '%s'" % self.payload
-                      print "FOUND MALWARE !!"
-                      subprocess.call(cmd.strip().split(" "))
-                      self.payload = self.payload.replace("wget","WGOT")
+                        # send mail
+                        self.payload = self.payload.replace(" ","_")
+                        cmd = "python send_mail.py '%s'" % self.payload
+                        subprocess.call(cmd.strip().split(" "))
+                        self.payload = self.payload.replace("wget","WGET")
 
-                    if self.payload.find("1234") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("admin") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("Adnim") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("changeme") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("guest") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("dreambox") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("user") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("nokia") != -1:
-                      self.payload = "root\x0d\x0a"
-                    elif self.payload.find("support") != -1:
-                      self.payload = "root\x0d\x0a"
+                    if self.payload.find("fpt") != -1:
+                        self.payload = self.payload.replace("ftp","FTP")
+
+                    if self.payload.find("+x") != -1:
+                        self.payload = self.payload.replace("+x","-x")
+                    if self.payload.find("777") != -1:
+                        self.payload = self.payload.replace("777","000")
+
+                    with open(../etc/accept_userpass, 'r') as fp:
+                        for line in fp:
+                            if self.payload.find(line) != -1:
+                                self.payload = "root\x0d\x0a"
+
                     self.receiveQueue.append(self.payload)
             except socket.error:
                 pass
@@ -87,7 +82,7 @@ class QemuThread(threading.Thread):
 # The Thread class for Qemu
 # Make instance with each connection from Attacker
 
-    def __init__(self,qemuIP,targetPORT,,proxyThreadRequest,proxyThreadQueue):
+    def __init__(self,qemuIP,targetPORT,proxyThreadRequest,proxyThreadQueue):
         self.proxyThreadQueue = proxyThreadQueue
         self.receiveQueue = []
         self.proxyThreadRequest = proxyThreadRequest
@@ -104,9 +99,7 @@ class QemuThread(threading.Thread):
           # make Client socket
           self.qemuSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
           try:
-            # socket connect
             self.qemuSocket.connect((self.qemuIP,int(self.targetPORT)))
-
           except IndexError:
             print "Error Connection to Qemu"
 
@@ -137,6 +130,5 @@ if __name__ == "__main__":
 
     PORT = int(sys.argv[1])
     server = SocketServer.ThreadingTCPServer(('', PORT), Handler)
-    print "=== Set up proxy ==="
+    print "=== Set up proxy qemu ==="
     server.serve_forever()
-

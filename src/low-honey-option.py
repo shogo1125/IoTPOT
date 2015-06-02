@@ -13,21 +13,16 @@ import threading
 import binascii
 import struct
 
-option="\xff\xfd\x01\xff\xfd\x1f\xff\xfd\x21\xff\xfb\x01\xff\xfb\x03"
-loginmes="192.0.0.64.login:\x20"
-password="Password:\x20"
-incorrect="Login incorrect\x0d\x0a"
-rn="\x0d\x0a"
-busybox="\x0d\x0a\x0d\x0a\x0d\x0aBusyBox v1.1.2 (2007.05.09-01:19+0000) Built-in shell (ash)\x0d\x0a" \
-        "Enter 'help' for a list of built-in commands.\x0d\x0a\x0d\x0a\x7e\x20\x24\x20"
-ZORRO="/bin/busybox ZORRO\x0d\x0a"
-wget="/bin/busybox wget\x0d\x0a"
-echo_ZORRO="\x5c\x5c\x78\x35\x41\x5c\x5c\x78\x34\x46\x5c\x5c\x78\x35\x32\x5c\x5c\x78\x35\x32\x5c\x5c\x78\x34\x46\x0d\x0a"
-echo_gayfgt="\x5c\x78\x36\x37\x5c\x78\x36\x31\x5c\x78\x37\x39\x5c\x78\x36\x36\x5c\x78\x36\x37\x5c\x78\x37\x34"
-echo_gayfgt2="\x5c\x31\x34\x37\x5c\x31\x34\x31\x5c\x31\x37\x31\x5c\x31\x34\x36\x5c\x31\x34\x37\x5c\x31\x36\x34"
-echo_welcome="\x5c\x5c\x78\x37\x37\x5c\x5c\x78\x36\x35\x5c\x5c\x78\x36\x63\x5c\x5c\x78\x36\x33\x5c\x5c\x78\x33\x30\x5c\x5c\x78\x36\x64\x5c\x5c\x78\x36\x35"
-cat_mount="cat /proc/mounts"
-status="""rootfs / rootfs rw 0 0
+
+option = "\xff\xfd\x01\xff\xfd\x1f\xff\xfd\x21\xff\xfb\x01\xff\xfb\x03"
+loginmes = "192.0.0.64.login:\x20"
+password = "Password:\x20"
+incorrect = "Login incorrect\x0d\x0a"
+prompt = "\x7e\x20\x24\x20"
+shell_path = "../etc/shell/sh1.txt"
+busybox = "\x0d\x0a\x0d\x0a\x0d\x0aBusyBox v1.1.2 (2007.05.09-01:19+0000) Built-in shell (ash)\x0d\x0a" \
+          "Enter 'help' for a list of built-in commands.\x0d\x0a\x0d\x0a\x7e\x20\x24\x20"
+status = """rootfs / rootfs rw 0 0
 /dev/root / cramfs ro 0 0
 proc /proc proc rw,nodiratime 0 0
 sysfs /sys sysfs rw 0 0
@@ -39,14 +34,25 @@ devpts /dev/pts devpts rw 0 0
 /dev/mtdblock/6 /mnt/mtd jffs2 rw,noatime 0 0
 /dev/ram /var/tmp ramfs rw 0 0
 """
-cat_sh="/bin/busybox cat /bin/sh"
+
+cmd_dict = {}
+cmd_dict["cd /tmp\x0d\x0a"] = ""
+cmd_dict["./.drop > .nttpd\x0d\x0a"] = ""
+cmd_dict["rm -f .nttpd\x0d\x0a"] = "rm -f .nttpd\x0d\x0arm: cannot remove `.nttpd': No such file or directory"
+cmd_dict["rm -f .drop\x0d\x0a"] = "rm -f .drop\x0d\x0a"+prompt
+cmd_dict["sh\x0d\x0a"] = busybox
+cmd_dict[r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0a"] = r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0agayfgt\x0d\x0a"+prompt
+cmd_dict["echo welcome\x0d\x0a"] = "welcome\x0d\x0a"+prompt  
+cmd_dict["echo $?K_O_S_T_Y_P_E\x0d\x0a"] = "0K_O_S_T_Y_P_E\x0d\x0a"+prompt
+cmd_dict[r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0a"] = r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0awelc0me\x0d\x0a"+prompt
+cmd_dict["/bin/busybox ZORRO\x0d\x0a"] = "/bin/busybox ZORRO\x0d\x0aZORRO: applet not found\x0d\x0a"+prompt
+cmd_dict["/bin/busybox wget\x0d\x0a"] = "/bin/busybox wget\x0d\x0awget: applet not found\x0d\x0a"+prompt
+cmd_dict[r"/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F"+"\x0d\x0a"] = "/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F\x0d\x0aZORRO\x0d\x0a"+prompt
+cmd_dict["cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"] = "cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"+status+"\x0d\x0aZORRO: applet not found\x0d\x0a"+prompt
+
 
 class Handler(SocketServer.StreamRequestHandler):
-# The Handler class for proxy
-# Make instance with each connection and override handle() method
-# Session from Attacker : self.request
 
-    # constracta
     def __init__(self,request,client_address,server):
         self.attackerIP = ""
         self.targetPORT = ""
@@ -64,18 +70,18 @@ class Handler(SocketServer.StreamRequestHandler):
         print "%s IP %s.%s > %s.%s : connect" \
             % (self.date,self.attackerIP,self.client_address[1],self.server.server_address[0],self.targetPORT)
 
-        odd = (self.targetPORT % 29) + 1
-        cmd = "./getdata.sh %d 1" % odd
+        odd = (self.targetPORT % 29) + 1 
+        cmd = "./getdata.sh %d 1" % odd 
         pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         option = pic.stdout.read()
         self.request.send(option)
         time.sleep(0.6)
 
-        cmd = "./getdata.sh %d 2" % odd
+        cmd = "./getdata.sh %d 2" % odd 
         pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         loginmes = pic.stdout.read()
         self.request.send(loginmes)
-
+                                                                                                                                                                                                             
         cmd = "./getdata.sh %d 3" % odd
         pic = subprocess.Popen(cmd.strip().split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         password = pic.stdout.read()
@@ -87,7 +93,7 @@ class Handler(SocketServer.StreamRequestHandler):
             try:
                 self.payload = self.request.recv(8192)
                 if len(self.payload) != 0:
-                    if self.payload.find(rn) == -1:
+                    if self.payload.find("\x0d\x0a") == -1:
                         print "%s" % binascii.hexlify(self.payload)
                         self.payload = ""
                     elif self.state == 0:
@@ -100,52 +106,40 @@ class Handler(SocketServer.StreamRequestHandler):
                         self.state += 1
                         self.payload = busybox
                         time.sleep(0.6)
-                    elif self.payload.find("sh") == 0:
-                        self.payload = busybox
-                    elif self.payload.find(cat_mount) != -1:
-                        self.payload = cat_mount+"\x0d\x0a"+status+"\x0d\x0a"+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find("echo welcome") != -1:
-                         self.payload = "welcome"+"\x0d\x0a"+"\x7e\x20\x24\x20"  
-                    elif self.payload.find(echo_welcome) != -1: 
-                        self.payload = "welc0me"+"\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find(ZORRO) != -1:
-                        self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find(wget) != -1:
-                        self.payload = wget+"sh: /bin/busybox wget: not found\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find(echo_ZORRO) != -1:
-                        self.payload = self.payload+"ZORRO\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find(echo_gayfgt) != -1:
-                        self.payload = self.payload+"gayfgt\x0d\x0a"+"\x7e\x20\x24\x20"
-                    elif self.payload.find(echo_gayfgt2) != -1:
-                        self.payload = self.payload+"gayfgt\x0d\x0a"+"\x7e\x20\x24\x20"
+
+                    elif cmd_dict.has_key(self.payload) == True:
+                        self.payload = cmd_dict.get(self.payload,"NOT FOUND")
                     elif self.payload.find("var") != -1:
                         if self.payload.find("/bin/busybox rm -rf /var/tmp/") != -1:
                           pass
                         elif self.payload.find("bin.sh") != -1:
-                          self.payload = self.payload+"binfagt\x0d\x0a"
+                          self.payload = self.payload+"binfagt\x0d\x0a"+prompt
+                        elif self.payload.find("/bin/busybox WOPBOT") != -1:
+                          self.payload = self.payload+"WOPBOT: applet not found\x0d\x0a"+prompt
                         else:
-                          self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+"\x7e\x20\x24\x20"
+                          self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+prompt
                     elif self.payload.find("$HOME/.*history") != -1:
-                        self.payload = ""
-                    elif self.payload.find(cat_sh) != -1:
-                        f = open("output1.txt")
+                        self.payload = prompt 
+                    elif self.payload.find("/bin/busybox cat /bin/sh") != -1:
+                        f = open(shell_path)
                         datas = f.read()
                         f.close()
                         data = datas.split(' ')
                         for hexa in data:
                           d = int(hexa,16)
                           self.binary += struct.pack('!L',d)
-                        self.payload = cat_sh+"\x0d\x0a"+self.binary
-
+                        self.payload = "/bin/busybox cat /bin/sh\x0d\x0a"+self.binary
+                    elif self.payload.find("echo") != -1:
+                        if cmd_dict.has_key(self.payload) == False and  self.payload.find("ZORRO") == -1 and self.payload.find("WOPBOT") == -1:
+                            self.payload = self.payload+"\x0d\x0a"+prompt
                     else:
-                      self.payload = self.payload.replace(rn,"")
-                      self.payload = "sh: "+ self.payload + ": command not found\x0d\x0a\x7e\x20\x24\x20"
+                      self.payload = self.payload.replace("\x0d\x0a","")
+                      self.payload = "sh: "+ self.payload + ": command not found\x0d\x0a"+prompt
                     self.receiveQueue.append(self.payload)
 
             except socket.error:
                 pass
 
-            # check reveice Queue
             if len(self.receiveQueue) != 0:
                 sendData = self.receiveQueue.pop(0)
                 self.request.send(sendData)
@@ -161,6 +155,6 @@ if __name__ == "__main__":
 
     PORT = int(sys.argv[1])
     server = SocketServer.ThreadingTCPServer(('', PORT), Handler)
-    print "=== Set up low honeypot(NO)  ==="
+    print "=== Set up low honeypot(OPTION)  ==="
     server.serve_forever()
 
