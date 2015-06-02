@@ -1,2 +1,2 @@
-readonly SHELL_PATH="/opt/telnet_honey/etc/shell/"
-readonly DATAFILE_PATH="/opt/telnet_honey/etc/datafile"
+readonly SHELL_PATH="/opt/iotpot/etc/shell/"
+readonly LOGIN_PATH="/opt/iotpot/etc/login_prompt"
