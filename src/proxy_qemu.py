@@ -1,6 +1,6 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
-# last modified : 2015/01/21
+# last modified : 2015/06/02
 
 import SocketServer
 import sys
@@ -9,6 +9,7 @@ import datetime
 import time
 import subprocess
 import threading
+
 
 # The Handler class for proxy
 # Make instance with each connection and override handle() method
@@ -33,6 +34,10 @@ class Handler(SocketServer.StreamRequestHandler):
                self.server.server_address[0],self.targetPORT)
         th = QemuThread(self.attackerIP,self.targetPORT,self.request,self.receiveQueue)
         th.start()
+        success_list = []
+        with open("../etc/accept_userpass", 'r') as fp:
+            for line in fp:
+                success_list.append(line.strip()+"\x0d\x0a")
 
         self.request.setblocking(0)
         while True:
@@ -52,16 +57,15 @@ class Handler(SocketServer.StreamRequestHandler):
 
                     if self.payload.find("fpt") != -1:
                         self.payload = self.payload.replace("ftp","FTP")
-
+                    if self.payload.find("iptables") != -1:
+                        self.payload = self.payload.replace("iptables","IPTABLES")
                     if self.payload.find("+x") != -1:
                         self.payload = self.payload.replace("+x","-x")
                     if self.payload.find("777") != -1:
                         self.payload = self.payload.replace("777","000")
 
-                    with open(../etc/accept_userpass, 'r') as fp:
-                        for line in fp:
-                            if self.payload.find(line) != -1:
-                                self.payload = "root\x0d\x0a"
+                    if (self.payload in success_list) == True:
+                        self.payload = "root\x0d\x0a"
 
                     self.receiveQueue.append(self.payload)
             except socket.error:

@@ -17,7 +17,7 @@ password = "Password:\x20"
 incorrect = "Login incorrect\x0d\x0a"
 prompt = "\x7e\x20\x24\x20"
 busybox = "\x0d\x0a\x0d\x0a\x0d\x0aBusyBox v1.1.2 (2007.05.09-01:19+0000) Built-in shell (ash)\x0d\x0a" \
-          "Enter 'help' for a list of built-in commands.\x0d\x0a\x0d\x0a\x7e\x20\x24\x20"
+          "Enter 'help' for a list of built-in commands.\x0d\x0a\x0d\x0a"
 status = """rootfs / rootfs rw 0 0
 /dev/root / cramfs ro 0 0
 proc /proc proc rw,nodiratime 0 0
@@ -33,19 +33,24 @@ devpts /dev/pts devpts rw 0 0
 
 
 cmd_dict = {}
-cmd_dict["cd /tmp\x0d\x0a"] = ""
-cmd_dict["./.drop > .nttpd\x0d\x0a"] = ""
+cmd_dict["./.drop > .nttp\x0d\x0a"] = ""
 cmd_dict["rm -f .nttpd\x0d\x0a"] = "rm -f .nttpd\x0d\x0arm: cannot remove `.nttpd': No such file or directory"
-cmd_dict["rm -f .drop\x0d\x0a"] = "rm -f .drop\x0d\x0a"+prompt
+cmd_dict["rm -f .drop\x0d\x0a"] = "rm -f .drop\x0d\x0a"
 cmd_dict["sh\x0d\x0a"] = busybox
-cmd_dict[r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0a"] = r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0agayfgt\x0d\x0a"+prompt
-cmd_dict["echo welcome\x0d\x0a"] = "welcome\x0d\x0a"+prompt  
-cmd_dict["echo $?K_O_S_T_Y_P_E\x0d\x0a"] = "0K_O_S_T_Y_P_E\x0d\x0a"+prompt
-cmd_dict[r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0a"] = r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0awelc0me\x0d\x0a"+prompt
-cmd_dict["/bin/busybox ZORRO\x0d\x0a"] = "/bin/busybox ZORRO\x0d\x0aZORRO: applet not found\x0d\x0a"+prompt
-cmd_dict["/bin/busybox wget\x0d\x0a"] = "/bin/busybox wget\x0d\x0awget: applet not found\x0d\x0a"+prompt
-cmd_dict[r"/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F"+"\x0d\x0a"] = "/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F\x0d\x0aZORRO\x0d\x0a"+prompt
-cmd_dict["cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"] = "cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"+status+"\x0d\x0aZORRO: applet not found\x0d\x0a"+prompt
+cmd_dict[r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0a"] = r"echo -e '\x67\x61\x79\x66\x67\x74'"+"\x0d\x0agayfgt\x0d\x0a"
+cmd_dict[r"/bin/busybox;echo -e '\147\141\171\146\147\164'"+"\x0d\x0a"] = r"/bin/busybox;echo -e '\147\141\171\146\147\164'"+"\x0d\x0agayfgt\x0d\x0a"
+cmd_dict["echo welcome\x0d\x0a"] = "welcome\x0d\x0a"  
+cmd_dict["echo $?K_O_S_T_Y_P_E\x0d\x0a"] = "0K_O_S_T_Y_P_E\x0d\x0a"
+cmd_dict[r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0a"] = r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0awelc0me\x0d\x0a"
+cmd_dict["/bin/busybox ZORRO\x0d\x0a"] = "/bin/busybox ZORRO\x0d\x0aZORRO: applet not found\x0d\x0a"
+cmd_dict["/bin/busybox wget\x0d\x0a"] = "/bin/busybox wget\x0d\x0awget: applet not found\x0d\x0a"
+cmd_dict[r"/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F"+"\x0d\x0a"] = "/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F\x0d\x0aZORRO\x0d\x0a"
+cmd_dict["cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"] = "cat /proc/mounts && /bin/busybox ZORRO\x0d\x0a"+status+"\x0d\x0aZORRO: applet not found\x0d\x0a"
+
+path_dict = {}
+path_dict["cd /tmp\x0d\x0a"] = "/tmp"
+path_dict["cd /\x0d\x0a"] = "/"
+path_dict["cd /var\x0d\x0a"] = "/var"
 
 
 class Handler(SocketServer.StreamRequestHandler):
@@ -54,6 +59,7 @@ class Handler(SocketServer.StreamRequestHandler):
         self.attackerIP = ""
         self.targetPORT = ""
         self.payload = ""
+        self.prompt = prompt
         self.state = 0
         self.date = datetime.datetime.today()
         SocketServer.StreamRequestHandler.__init__(self,request,client_address,server)
@@ -81,8 +87,8 @@ class Handler(SocketServer.StreamRequestHandler):
             try:
                 self.payload = self.request.recv(8192)
                 if len(self.payload) != 0:
-                    if self.payload.find(rn) == -1:
-                        print "%s" % binascii.hexlify(self.payload)
+                    if self.payload.find("\x0d\x0a") == -1:
+                        #print "%s" % binascii.hexlify(self.payload)
                         self.payload = ""
                     elif self.state == 0:
                         print "user:%s" % self.payload
@@ -92,21 +98,25 @@ class Handler(SocketServer.StreamRequestHandler):
                     elif self.state == 1:
                         print "pass:%s" % self.payload
                         self.state += 1
-                        self.payload = busybox
+                        self.payload = busybox+self.prompt
                         time.sleep(0.6)
                     elif cmd_dict.has_key(self.payload) == True:
-                        self.payload = cmd_dict.get(self.payload,"NOT FOUND")
+                        self.payload = cmd_dict.get(self.payload,"NOT FOUND")+self.prompt
+                    elif path_dict.has_key(self.payload) == True:
+                        path = path_dict.get(self.payload,"NOT FOUND")
+                        self.prompt = path+"\x20\x24\x20"
+                        self.payload = self.prompt
                     elif self.payload.find("var") != -1: 
                         if self.payload.find("/bin/busybox rm -rf /var/tmp/") != -1: 
                           pass
                         elif self.payload.find("bin.sh") != -1: 
                           self.payload = self.payload+"binfagt\x0d\x0a"+prompt
                         elif self.payload.find("/bin/busybox WOPBOT") != -1: 
-                          self.payload = self.payload+"WOPBOT: applet not found\x0d\x0a"+prompt
+                          self.payload = self.payload+"WOPBOT: applet not found\x0d\x0a"+self.prompt
                         else:
-                          self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+prompt
+                          self.payload = self.payload+"ZORRO: applet not found\x0d\x0a"+self.prompt
                     elif self.payload.find("$HOME/.*history") != -1: 
-                        self.payload = prompt 
+                        self.payload = self.prompt 
                     elif self.payload.find("/bin/busybox cat /bin/sh") != -1: 
                         f = open(shell_path)
                         datas = f.read()
@@ -118,10 +128,10 @@ class Handler(SocketServer.StreamRequestHandler):
                         self.payload = "/bin/busybox cat /bin/sh\x0d\x0a"+self.binary
                     elif self.payload.find("echo") != -1:
                         if cmd_dict.has_key(self.payload) == False and  self.payload.find("ZORRO") == -1 and self.payload.find("WOPBOT") == -1:
-                            self.payload = self.payload+"\x0d\x0a"+prompt
+                            self.payload = self.payload+"\x0d\x0a"+self.prompt
                     else:
                       self.payload = self.payload.replace("\x0d\x0a","")
-                      self.payload = "sh: "+ self.payload + ": command not found\x0d\x0a"+prompt
+                      self.payload = "sh: "+ self.payload + ": command not found\x0d\x0a"+self.prompt
 
                     self.receiveQueue.append(self.payload)
 
