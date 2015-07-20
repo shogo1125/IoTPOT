@@ -1,0 +1,8 @@
+#gmail mail account for downloader
+set smtp-use-starttls
+set smtp=<smtpserver>
+set smtp-auth=login
+set smtp-auth-user=<your gmail address>
+set smtp-auth-password=<password>//
+set from="your name"
+#set sendmail=/usr/sbin/ssmtp

